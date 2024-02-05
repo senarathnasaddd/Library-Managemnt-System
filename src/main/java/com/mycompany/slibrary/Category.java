@@ -7,9 +7,14 @@ package com.mycompany.slibrary;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -23,10 +28,12 @@ public class Category extends javax.swing.JFrame {
     public Category() {
         initComponents();
         Connect();
+        Category_Load();
     }
 
     Connection con;
     PreparedStatement pst;
+    ResultSet rs;
 
     public void Connect() {
         try {
@@ -37,6 +44,33 @@ public class Category extends javax.swing.JFrame {
         }
     }
 
+    public void Category_Load(){
+        int c;
+        try {
+            pst =con.prepareStatement("Select * from category");
+            rs = pst.executeQuery();
+            
+            ResultSetMetaData rsd= rs.getMetaData();
+            c= rsd.getColumnCount();
+            
+            DefaultTableModel d= (DefaultTableModel)jTable1.getModel();
+            d.setRowCount(0);
+            
+            while(rs.next()){
+                Vactor v2 = new Vector();
+                for (int i=1; i<=c;i++){
+                    v2.add(rs.getString("ID"));
+                    v2.add(rs.getString("CatName"));
+                    v2.add(rs.getString("Status"));
+                }
+                d.addRow(v2);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Category.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -96,6 +130,14 @@ public class Category extends javax.swing.JFrame {
         jButton3.setText("DELETE");
 
         jButton4.setText("CANCEL");
+
+        txtCatName.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtCatNameActionPerformed(evt);
+            }
+        });
+
+        txtCatStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Active", "Deactive" }));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -181,9 +223,31 @@ public class Category extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
+        String category= txtCatName.getText();
+        String status=txtCatStatus.getSelectedItem().toString();
         
-        
+        try {
+            pst=con.prepareStatement("Insert into category(CatName,Status)values(?,?)");
+            pst.setString(1,category);
+            pst.setString(2,status);
+            int k= pst.executeUpdate();
+             
+            if(k==1){
+                JOptionPane.showMessageDialog(this,"Category created");
+                txtCatName.setText("");
+                txtCatStatus.setSelectedIndex(-1);
+                txtCatName.requestFocus();
+            }else{
+                JOptionPane.showMessageDialog(this,"Error");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Category.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void txtCatNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCatNameActionPerformed
+        // TODO add your handling code here:   
+    }//GEN-LAST:event_txtCatNameActionPerformed
 
     /**
      * @param args the command line arguments
